@@ -1,0 +1,58 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String     @id @default(cuid())
+  email        String     @unique
+  passwordHash String?
+  name         String?
+  role         String     @default("EMPLOYEE") // ADMIN, MANAGER, EMPLOYEE
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  expenses     Expense[]
+  categories   Category[]
+  auditLogs    AuditLog[]
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String
+  icon        String?
+  budgetLimit Float?
+  userId      String?
+  user        User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expenses    Expense[]
+}
+
+model Expense {
+  id         String   @id @default(cuid())
+  title      String
+  amount     Float
+  currency   String   @default("USD")
+  date       DateTime
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  receiptUrl String?
+  status     String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  notes      String?
+  createdAt  DateTime @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String
+  entity    String
+  entityId  String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  timestamp DateTime @default(now())
+}
